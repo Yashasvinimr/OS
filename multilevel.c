@@ -1,71 +1,76 @@
-#include <stdio.h>
-
-#define MAX_QUEUE_SIZE 100
-
-
-typedef struct
+#include<stdio.h>
+void swap(int *a,int *b)
 {
-    int processID;
-    int arrivalTime;
-    int burstTime;
-    int priority;
-} Process;
-
-
-void executeProcess(Process process)
-{
-    printf("Executing Process %d\n", process.processID);
-    for (int i = 1; i <= process.burstTime; i++)
-    {
-        printf("Process %d: %d/%d\n", process.processID, i, process.burstTime);
-    }
-    printf("Process %d executed\n", process.processID);
+    int temp;
+    temp=*a;
+    *a=*b;
+    *b=temp;
 }
-
-void scheduleFCFS(Process queue[], int size)
+void main()
 {
-    for (int i = 0; i < size; i++)
+    int n,pid[10],burst[10],type[10],arr[10],wt[10],ta[10],ct[10],i,j;
+    float avgwt=0,avgta=0;
+    int sum = 0;
+    printf("Enter the total number of processes\n");
+    scanf("%d",&n);
+    for(i=0;i<n;i++)
     {
-        executeProcess(queue[i]);
+        printf("Enter the process id, type of process(user-1 and system-0), arrival time and burst time\n");
+        scanf("%d",&pid[i]);
+        scanf("%d",&type[i]);
+        scanf("%d",&arr[i]);
+        scanf("%d",&burst[i]);
     }
-}
-
-int main()
-{
-    int numProcesses;
-    Process processes[MAX_QUEUE_SIZE];
-    printf("Enter the number of processes: ");
-    scanf("%d", &numProcesses);
-    for (int i = 0; i < numProcesses; i++)
+    //sorting the processes according to arrival time
+    for(i=0;i<n-1;i++)
     {
-        printf("Process %d:\n", i + 1);
-        printf("Arrival Time: ");
-        scanf("%d", &processes[i].arrivalTime);
-        printf("Burst Time: ");
-        scanf("%d", &processes[i].burstTime);
-        printf("System(0)/User(1): ");
-        scanf("%d", &processes[i].priority);
-        processes[i].processID = i + 1;
-    }
-    Process systemQueue[MAX_QUEUE_SIZE];
-    int systemQueueSize = 0;
-    Process userQueue[MAX_QUEUE_SIZE];
-    int userQueueSize = 0;
+        for(j=0;j<n-i-1;j++)
+        {
+            if(arr[j]>arr[j+1])
+            {
+                swap(&arr[j],&arr[j+1]);
+                swap(&pid[j],&pid[j+1]);
+                swap(&burst[j],&burst[j+1]);
+                swap(&type[j],&type[j+1]);
 
-    for (int i = 0; i < numProcesses; i++)
-    {
-        if (processes[i].priority == 0)
-        {
-            systemQueue[systemQueueSize++] = processes[i];
-        } else
-        {
-            userQueue[userQueueSize++] = processes[i];
+            }
         }
     }
-    printf("System Queue:\n");
-    scheduleFCFS(systemQueue, systemQueueSize);
-    printf("User Queue:\n");
-    scheduleFCFS(userQueue, userQueueSize);
+    //assuming only two process can have same arrival time and different priority
+    for(i=0;i<n-1;i++)
+    {
+        for(j=0;j<n-i-1;j++)
+        {
+            if(arr[j]==arr[j+1] && type[j]<type[j+1])
+            {
+                swap(&arr[j],&arr[j+1]);
+                swap(&pid[j],&pid[j+1]);
+                swap(&burst[j],&burst[j+1]);
+                swap(&type[j],&type[j+1]);
+            }
+        }
+    }
+    //calculating completion time, arrival time and waiting time
+    sum = sum + arr[0];
+    for(i = 0;i<n;i++){
+        sum = sum + burst[i];
+        ct[i] = sum;
+        ta[i] = ct[i] - arr[i];
+        wt[i] = ta[i] - burst[i];
+        if(sum<arr[i+1]){
+            int t = arr[i+1]-sum;
+            sum = sum+t;
+        }
+    }
 
-    return 0;
+    printf("Process id\tType\tarrival time\tburst time\twaiting time\tturnaround time\n");
+    for(i=0;i<n;i++)
+    {
+        avgta+=ta[i];
+        avgwt+=wt[i];
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",pid[i],type[i],arr[i],burst[i],wt[i],ta[i]);
+    }
+    printf("average waiting time =%f\n",avgwt/n);
+    printf("average turnaround time =%f",avgta/n);
+
 }
